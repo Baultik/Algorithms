@@ -1,7 +1,7 @@
 
 
 var HashTable = function() {
-  this._storage = ...;
+  this._storage = [];
   this._count = 0;
   this._limit = 8;
 };
@@ -27,16 +27,32 @@ HashTable.prototype.insert = function(key, value) {
   //retrieve the bucket at this particular index in our storage, if one exists
   //  [[ [k,v], [k,v], [k,v] ] , [ [k,v], [k,v] ]  [ [k,v] ] ]
   //
-  var bucket = this._storage[index]
+  var slot = this._storage[index];
+  var pair = [key,value];
 
     //does a bucket exist or do we get undefined when trying to retrieve said index?
     //
-    ...
+    if (!slot) {
+      slot = [];
+    }
 
     //now iterate through our bucket to see if there are any conflicting
     //key value pairs within our bucket. If there are any, override them.
     //
-    ...
+    var conflict = false;
+    for (var i = 0; i < slot.length; i++) {
+      if (slot[i][0] === pair[0]) {//matching keys
+        slot[i] = pair;
+        conflict = true;
+        break;
+      }
+    }
+    if (!conflict) {
+        slot.push(pair);
+    }
+
+    this._storage[index] = slot;
+    return this;
 };
 
 
@@ -51,8 +67,18 @@ HashTable.prototype.insert = function(key, value) {
 //
 HashTable.prototype.remove = function(key) {
   var index = this.hashFunc(key, this._limit);
+  var slot = this._storage[index];
 
-  ...
+    if (slot) {
+        for (var i = 0; i < slot.length; i++) {
+            if (slot[i][0] === key) {//matching keys
+                var old = slot.splice(i,1);
+                return old[1];
+            }
+        }
+    }
+
+    return null;
 };
 
 
@@ -67,9 +93,17 @@ HashTable.prototype.remove = function(key) {
 //
 HashTable.prototype.retrieve = function(key) {
   var index = this.hashFunc(key, this._limit);
-  var bucket = this._storage[index];
+  var slot = this._storage[index];
 
-  ...
+  if (slot) {
+      for (var i = 0; i < slot.length; i++) {
+          if (slot[i][0] === key) {//matching keys
+              return slot[i][1];
+          }
+      }
+  }
+
+  return null;
 };
 
 
@@ -117,7 +151,7 @@ hashT.insert('Boo Radley', '520-589-1970');
 //hashT.retrieve();
 //[ , [ [ 'Boo Radley', '520-589-1970' ] ], , [ [ 'Alex Hawkins', '510-599-1930' ] ] ]
 hashT.insert('Vance Carter', '120-589-1970').insert('Rick Mires', '520-589-1970').insert('Tom Bradey', '520-589-1970').insert('Biff Tanin', '520-589-1970');
-//hashT.retrieveAll();
+hashT.retrieveAll();
 /*
  [ ,
  [ [ 'Boo Radley', '520-589-1970' ],
@@ -133,7 +167,7 @@ hashT.insert('Vance Carter', '120-589-1970').insert('Rick Mires', '520-589-1970'
 //overide example (Phone Number Change)
 //
 hashT.insert('Rick Mires', '650-589-1970').insert('Tom Bradey', '818-589-1970').insert('Biff Tanin', '987-589-1970');
-//hashT.retrieveAll();
+hashT.retrieveAll();
 
 /*
  [ ,
@@ -150,7 +184,7 @@ hashT.insert('Rick Mires', '650-589-1970').insert('Tom Bradey', '818-589-1970').
 
 hashT.remove('Rick Mires');
 hashT.remove('Tom Bradey');
-//hashT.retrieveAll();
+hashT.retrieveAll();
 
 /*
  [ ,
